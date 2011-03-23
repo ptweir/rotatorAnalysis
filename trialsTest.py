@@ -30,26 +30,32 @@ ax3 = fig3.add_subplot(111)
 meanAbsDiffAngles,meanVarianceAngles,numTrialsStopped = [[]]*len(flies),[[]]*len(flies),[[]]*len(flies)
 for i, ad in enumerate(ada):
     ad[ds[i]>0] = numpy.ma.masked
+    #ad[mva[i]>.5] = numpy.ma.masked
     meanAbsDiffAngles[i] = ad.mean(axis=1)
     mva[i][ds[i]>0] = numpy.ma.masked
+    #mva[i][mva[i]>.5] = numpy.ma.masked
     meanVarianceAngles[i] = mva[i].mean(axis=1)
     
     numTrialsStopped[i] = sum(ds[i].data>0,axis=1) #CHECK
     meanAbsDiffAngles[i][numTrialsStopped[i]>2] = numpy.ma.masked
     meanVarianceAngles[i][numTrialsStopped[i]>2] = numpy.ma.masked
     
-    asc = ax1.scatter(meanAbsDiffAngles[i],meanVarianceAngles[i],color=PLOTCOLORS[i])
-    asc.set_label(labels[i])
+    if meanVarianceAngles[i].compressed().size > 0:
     
-    plotArgs = dict(color=PLOTCOLORS[i])
-    line = cumprobdist(ax2,meanVarianceAngles[i].compressed(),1.4,plotArgs=plotArgs)
-    line.set_label(labels[i])
+        asc = ax1.scatter(meanAbsDiffAngles[i],meanVarianceAngles[i],color=PLOTCOLORS[i])
+        asc.set_label(labels[i])
+        
+        plotArgs = dict(color=PLOTCOLORS[i])
+        line = cumprobdist(ax2,meanVarianceAngles[i].compressed(),1.4,plotArgs=plotArgs)
+        line.set_label(labels[i])
+        
+        line = cumprobdist(ax3,meanAbsDiffAngles[i].compressed(),180,plotArgs=plotArgs)
+        line.set_label(labels[i])
     
-    line = cumprobdist(ax3,meanAbsDiffAngles[i].compressed(),180,plotArgs=plotArgs)
-    line.set_label(labels[i])
     
-    
-ax1.legend()
+ax1.legend(loc='lower right')
+ax1.set_ylabel('average anglular variance')
+ax1.set_xlabel('abs diff angle')
 ax2.legend(loc='upper right')
 ax2.set_ylim((-.1,1.1))
 ax2.set_xlabel('average anglular variance')
@@ -70,3 +76,8 @@ ax5 = fig5.add_subplot(111)
 ax5.boxplot([mVa.compressed() for mVa in meanVarianceAngles])
 ax5.set_xticklabels(labels)
 ax5.set_ylabel('var angle')
+
+for i, ad in enumerate(ada):
+    ad.mask = np.ma.nomask
+    mva[i].mask = np.ma.nomask
+
