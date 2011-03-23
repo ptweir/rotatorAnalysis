@@ -20,6 +20,7 @@ def angleDiffDegrees(alpha,beta):
     return D
 
 
+MOD_180 = False
 NUM_TRIALS = 12
 ROTATOR_STATE = dict({'U': 0, 'R': 1})
 STOPBUFFER = 0
@@ -42,7 +43,8 @@ for b, baseDir in enumerate(flies.keys()):
 
         orientations = np.ma.masked_invalid(fly['orientations'],copy=True) #mask in case of nans (missed tracking) COPY
         orientations = orientations + 180
-        orientations = mod(orientations,180)*2.0
+        if MOD_180:
+            orientations = mod(orientations,180)*2.0
         
         times = fly['times'].copy() #not sure if we should mask this array, also
         
@@ -64,7 +66,7 @@ for b, baseDir in enumerate(flies.keys()):
         
         print 'total_num stops = ', total_num_stops
             
-        if (baseDir[-8:] == '12trials') or (baseDir[-5:] == 'white'):
+        if (baseDir[-8:] == '12trials') or (baseDir[-5:] == 'white') or (baseDir[-11:] == 'diffuserPol'):
             changeTimesForPlots = sky['changeTimes']
             rotatorStateForPlots = sky['rotatorState']
         else:
@@ -83,7 +85,11 @@ for b, baseDir in enumerate(flies.keys()):
                 
             #trialInds = (times > startTime) & (times <= endTime)
             
-            meanAngleTrials[fNum,i] = (circmean(orientations[startInd:endInd]*np.pi/180.0)*180.0/np.pi)/2.0
+            if MOD_180:
+                meanAngleTrials[fNum,i] = (circmean(orientations[startInd:endInd]*np.pi/180.0)*180.0/np.pi)/2.0
+            else:
+                meanAngleTrials[fNum,i] = circmean(orientations[startInd:endInd]*np.pi/180.0)*180.0/np.pi
+                
             varAngleTrials[fNum,i] = circvar(orientations[startInd:endInd]*np.pi/180.0)
             rotatorStateTrials[fNum,i] = ROTATOR_STATE[rotatorStateForPlots[i]]
             
