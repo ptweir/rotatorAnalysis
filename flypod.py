@@ -219,7 +219,7 @@ def circle_fit(dataX,dataY):
     dataY       numpy array containing y data (must be same size as dataX)
     
     example:
-    cx, cy, r = flypod2.circle_fit(x,y)
+    cx, cy, r = flypod.circle_fit(x,y)
     """ 
     n = sum(~numpy.isnan(dataX))
     a = numpy.ones((n,3))
@@ -260,7 +260,7 @@ def rose(data,wrapPoint=360,ax='current',plotArgs={}):
     n = numpy.append(n,n[0])
     binCenters = numpy.append(binCenters,binCenters[0])
     binCenters = -binCenters + numpy.pi/2 #this makes 0 straight up, with angles increasing clockwise
-    pylab.plot(binCenters,n,**plotArgs)
+    ax.plot(binCenters,n,**plotArgs)
     ax.set_rmax(.15)
     return wrappedData, n, bins, binCenters, ax
 
