@@ -1,13 +1,25 @@
 import time, numpy, pylab
 import flypod, sky_times
-from scipy.stats.morestats import circmean, circvar	
 pylab.ion()
 
 #dirName = '/media/weir05/data/rotator/indoor/gray/12trials/fly10'
 #dirName = '/media/weir05/data/rotator/indoor/12trials/fly17'
 #dirName = '/media/weir05/data/rotator/indoor/sham12trials/fly09'
 #dirName = '/media/weir05/data/rotator/12trials/fly92'
-dirName = '/media/weir05/data/rotator/indoor/sham12trials/white/fly28'
+dirName = '/media/weir09/data/indoor/diffuserPol/sham12trials/fly04'
+
+def circmean(alpha):
+    mean_angle = numpy.arctan2(numpy.mean(numpy.sin(alpha)),numpy.mean(numpy.cos(alpha)))
+    return mean_angle
+
+def circvar(alpha):
+    if numpy.ma.isMaskedArray(alpha):
+        N = alpha.count()
+    else:
+        N = len(alpha)
+    R = numpy.sqrt(numpy.sum(numpy.sin(alpha))**2 + numpy.sum(numpy.cos(alpha))**2)/N
+    V = 1-R
+    return V
 
 fly = flypod.analyze_directory(dirName)
 CHANGEBUFFER = 0
@@ -55,10 +67,9 @@ if fly is not None:
         ors = ors[~numpy.isnan(ors)]
         if len(ors)>0:
             orw,n,b,bc,ax = flypod.rose(ors,360)
-            m=circmean(ors,high=180,low=-180)
-            v=circvar(ors*numpy.pi/180,high=numpy.pi,low=-numpy.pi)
-            #hold('on')
-            pylab.polar([0,numpy.pi/2-m*numpy.pi/180],[0,ax.get_rmax()*(1-v)])
+            m=circmean(ors*numpy.pi/180)*180/numpy.pi
+            v=circvar(ors*numpy.pi/180)
+            ax2.plot([0,numpy.pi/2-m*numpy.pi/180],[0,ax.get_rmax()*(1-v)])
             ax2.set_rmax(.4)
             ax2.set_rgrids([1],'')
             ax2.set_thetagrids([0,90,180,270],['','','',''])
@@ -75,9 +86,9 @@ if fly is not None:
     fig3.set_facecolor('w')
     fig3.suptitle(fly['dirName'])
     for i, d in enumerate(COLORS):
-        #m=circmean(totals[d],high=180,low=-180)
-        m=circmean(totals[d],high=180,low=-180)
-        v=circvar(totals[d]*numpy.pi/180,high=numpy.pi,low=-numpy.pi)
+        #m=circmean(totals[d]*numpy.pi/180)*180/numpy.pi
+        m=circmean(totals[d]*numpy.pi/180)*180/numpy.pi
+        v=circvar(totals[d]*numpy.pi/180)
         ax3 = fig3.add_subplot(2,2,i+1,polar=True)
         orw,n,b,bc,ax = flypod.rose(totals[d],360)
         #orw,n,b,bc,ax = flypod.rose(totals[d],360)
