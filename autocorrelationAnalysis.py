@@ -2,8 +2,8 @@ import numpy as np
 import pylab
 pylab.ion()
 
-DOWNSAMPLE_RATE = 50
-OFFSET = 120
+DOWNSAMPLE_RATE = 10
+OFFSET = 0
 
 for b, baseDir in enumerate(flies.keys()):
     numFlies = len(flies[baseDir])
@@ -17,8 +17,11 @@ for b, baseDir in enumerate(flies.keys()):
 
         orientations = fly['orientations'].copy()
         orientations = orientations[::DOWNSAMPLE_RATE]
-        orientations = orientations*numpy.pi/180
+        orientations = orientations*numpy.pi/180.0
         complexOrientations = np.exp(np.complex(0,1)*orientations)
+        if np.sum(np.isnan(complexOrientations)) != 0:
+            print 'tracking failed ', np.sum(np.isnan(complexOrientations)), ' times'
+            complexOrientations[np.isnan(complexOrientations)] = np.ma.masked #times when tracking failed CHECK should be 0?
         
         times = fly['times'].copy()
         times = times - times[0]
@@ -28,15 +31,18 @@ for b, baseDir in enumerate(flies.keys()):
             timestep = np.median(np.diff(times))
             startInd = int(round(OFFSET/timestep))
             resultTimes = numpy.concatenate((-times[-startInd-1::-1],times[1:-startInd]))
-            result = np.correlate(complexOrientations[startInd:], complexOrientations[:-startInd].conjugate(), mode='full')
+            result = abs(np.correlate(complexOrientations[startInd:], complexOrientations[:-startInd].conjugate(), mode='full'))
         else:
             resultTimes = numpy.concatenate((-times[::-1],times[1:]))
-            result = np.correlate(complexOrientations, complexOrientations.conjugate(), mode='full')
+            result = abs(np.correlate(complexOrientations, complexOrientations.conjugate(), mode='full'))
             
         lines = ax.plot(resultTimes,result)
         line = lines[0]
         line.set_label(fly['dirName'][-5:])
+    ax.set_ylim(( 0, int(round(90000.0/DOWNSAMPLE_RATE)) ))
     ax.set_title(baseDir)
     for x in range(-720,720,120):
-        ax.axvline(x)
+        ax.axvline(x,color='k')
+    ax.set_xticks(range(-720,720,120))
     ax.legend()
+    ax.set_xlabel('time (sec)')
