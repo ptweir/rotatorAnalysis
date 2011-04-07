@@ -2,7 +2,8 @@ import time, numpy, flypod, pylab
 pylab.ion()
 COLORS = dict({'U': 'm', 'R': 'c'})
 PLOTCOLORS = ['m','k','c','r','g','b']
-MAX_NUM_STOPS=2
+MAX_NUM_STOPS=0
+MOD_180 = False
 def circmean(alpha):
     mean_angle = numpy.arctan2(numpy.mean(numpy.sin(alpha)),numpy.mean(numpy.cos(alpha)))
     return mean_angle
@@ -38,6 +39,8 @@ for bd, baseDir in enumerate(flies.keys()):
         
         orientations = fly['orientations'].copy()
         orientations = orientations + 180
+        if MOD_180:
+            orientations = mod(orientations,180)
         
         times = fly['times'].copy()
         
@@ -68,7 +71,11 @@ for bd, baseDir in enumerate(flies.keys()):
                     
             for i, d in enumerate(COLORS):
                 ax = fig.add_subplot(i+1,numFlies,1+fNum,polar=True)
-                m=circmean(totals[d]*numpy.pi/180.0)*180.0/numpy.pi
+                if MOD_180:
+                    m = (circmean(totals[d]*2.0*numpy.pi/180.0)*180.0/numpy.pi)/2.0
+                else:
+                    m = circmean(totals[d]*numpy.pi/180.0)*180.0/numpy.pi
+                #m=circmean(totals[d]*numpy.pi/180.0)*180.0/numpy.pi
                 v=circvar(totals[d]*numpy.pi/180)
                 orw,n,b,bc,ax = flypod.rose(totals[d],360)
                 pylab.polar([0,numpy.pi/2-m*numpy.pi/180],[0,ax.get_rmax()*(1-v)])
@@ -84,7 +91,10 @@ for bd, baseDir in enumerate(flies.keys()):
     vA[bd] = varAngle.copy()
     nS[bd] = numStops.copy()
     
-    asc = ax0.scatter(bd*numpy.ones(mA[bd][:,1].shape),abs(angleDiffDegrees(mA[bd][:,1],mA[bd][:,0])),color=PLOTCOLORS[bd])
+    asc = ax0.scatter(bd*numpy.ones(mA[bd][:,1].shape)+(pylab.rand(mA[bd][:,1].shape[0])-.5)/8.0,abs(angleDiffDegrees(mA[bd][:,1],mA[bd][:,0])),color=PLOTCOLORS[bd])
     asc.set_label(baseDir)
     
-ax0.legend()
+#asc = ax0.boxplot([abs(angleDiffDegrees(mmA[:,1],mmA[:,0])) for mmA in mA])
+ax0.legend(loc='upper left')
+ax0.set_ylabel('Difference in heading (pol unrotated - pol rotated) degrees')
+
