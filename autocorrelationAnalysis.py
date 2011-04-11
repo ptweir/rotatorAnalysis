@@ -2,8 +2,9 @@ import numpy as np
 import pylab
 pylab.ion()
 
-DOWNSAMPLE_RATE = 10
+DOWNSAMPLE_RATE = 50
 OFFSET = 0
+UNBIASED = True
 
 for b, baseDir in enumerate(flies.keys()):
     numFlies = len(flies[baseDir])
@@ -22,6 +23,7 @@ for b, baseDir in enumerate(flies.keys()):
         if np.sum(np.isnan(complexOrientations)) != 0:
             print 'tracking failed ', np.sum(np.isnan(complexOrientations)), ' times'
             complexOrientations[np.isnan(complexOrientations)] = np.ma.masked #times when tracking failed CHECK should be 0?
+            complexOrientations = complexOrientations - np.mean(complexOrientations)
         
         times = fly['times'].copy()
         times = times - times[0]
@@ -35,11 +37,16 @@ for b, baseDir in enumerate(flies.keys()):
         else:
             resultTimes = numpy.concatenate((-times[::-1],times[1:]))
             result = abs(np.correlate(complexOrientations, complexOrientations.conjugate(), mode='full'))
+        
+        if UNBIASED:
+            N = (resultTimes.size+1)/2.0
+            bias = 1.0/(N - abs(arange(-N+1,N)))
+            result = result*bias
             
         lines = ax.plot(resultTimes,result)
         line = lines[0]
         line.set_label(fly['dirName'][-5:])
-    ax.set_ylim(( 0, int(round(90000.0/DOWNSAMPLE_RATE)) ))
+    #ax.set_ylim(( 0, int(round(90000.0/DOWNSAMPLE_RATE)) ))
     ax.set_title(baseDir)
     for x in range(-720,720,120):
         ax.axvline(x,color='k')
