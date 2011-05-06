@@ -3,16 +3,17 @@ import pylab
 pylab.ion()
 import flyTools
 
-DOWNSAMPLE_RATE = 50
+DOWNSAMPLE_RATE = 30
 OFFSET = 0
 UNBIASED = True
-MAX_NUM_STOPS=2
-MAX_TIME_STOPPED = 60
+MAX_NUM_STOPS=12
+MAX_TIME_STOPPED = 120
+numSamplesInAverages = 130*60*12*2/DOWNSAMPLE_RATE #still not strictly correct
 figAll = pylab.figure()
 axAll = figAll.add_subplot(111)
 for b, baseDir in enumerate(flies.keys()):
     numFlies = len(flies[baseDir])
-    results = np.ma.masked_all((numFlies,3751))
+    results = np.ma.masked_all((numFlies,numSamplesInAverages))
     fig = pylab.figure()
     ax = fig.add_subplot(111)
     for fNum in range(numFlies):
@@ -63,13 +64,13 @@ for b, baseDir in enumerate(flies.keys()):
             else:
                 result = result/N
                 
-            results[fNum,:] = result[:3751]
+            results[fNum,:] = result[:numSamplesInAverages]
             
             lines = ax.plot(resultTimes,result)
             line = lines[0]
             line.set_label(fly['dirName'][-5:])
     #ax.set_ylim(( 0, int(round(90000.0/DOWNSAMPLE_RATE)) ))
-    avgLines = ax.plot(resultTimes[:3751],results.mean(0),color='r',linewidth=3)
+    avgLines = ax.plot(resultTimes[:numSamplesInAverages],results.mean(0),color='r',linewidth=3)
     avgLine = avgLines[0]
     avgLine.set_label('mean')
     ax.set_title(baseDir)
@@ -79,7 +80,7 @@ for b, baseDir in enumerate(flies.keys()):
     ax.legend()
     ax.set_xlabel('time (sec)')
     
-    avgLines = axAll.plot(resultTimes[:3751],results.mean(0))
+    avgLines = axAll.plot(resultTimes[:numSamplesInAverages],results.mean(0))
     avgLine = avgLines[0]
     avgLine.set_label(baseDir)
 axAll.set_title('averages')
